@@ -3053,4 +3053,10 @@ config KRAIT_REGULATOR
 	 line from the PMIC. This supply line is powered by multiple
 	 regulators running in ganged mode inside the PMIC. Enable
 	 this option to support such configurations.
+
+config CCI_HARDWARE_ID
+	bool "CCI Hardware ID Module"
+	depends on MSM_SMD
+	default y
+
 endif
