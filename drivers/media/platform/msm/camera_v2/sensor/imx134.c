@@ -19,6 +19,20 @@ DEFINE_MSM_MUTEX(imx134_mut);
 static struct msm_sensor_ctrl_t imx134_s_ctrl;
 
 static struct msm_sensor_power_setting imx134_power_setting[] = {
+#ifdef CONFIG_SONY_CAM_QCAMERA
+	{
+		.seq_type = SENSOR_GPIO,
+		.seq_val = SENSOR_GPIO_STANDBY,
+		.config_val = GPIO_OUT_HIGH,
+		.delay = 1,
+	},
+	{
+		.seq_type = SENSOR_GPIO,
+		.seq_val = SENSOR_GPIO_VIO,
+		.config_val = GPIO_OUT_HIGH,
+		.delay = 1,
+	},
+#endif
 	{/*1. I2C Pull-Up*/
 		.seq_type = SENSOR_VREG,
 		.seq_val = CAM_VIO, /*I2C-Pull-Up*/

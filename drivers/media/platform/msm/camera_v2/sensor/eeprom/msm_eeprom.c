@@ -24,6 +24,11 @@
 #define CDBG(fmt, args...) pr_debug(fmt, ##args)
 #endif
 
+#ifdef CONFIG_SONY_CAM_QCAMERA
+#define CAMERA_MODULE_NAME_LEN		8
+static uint8_t camera_module_names[2][CAMERA_MODULE_NAME_LEN];
+#endif
+
 int cci_camera_source = 0;
 
 DEFINE_MSM_MUTEX(msm_eeprom_mutex);
@@ -240,6 +245,9 @@ int32_t read_eeprom_memory(struct msm_eeprom_ctrl_t *e_ctrl)
 				return rc;
 			}
 		}
+#ifdef CONFIG_SONY_CAM_QCAMERA
+		e_ctrl->i2c_client.cci_client->sid++;
+#endif
 	}
 	return rc;
 }
@@ -797,19 +805,30 @@ static int32_t msm_eeprom_spi_remove(struct spi_device *sdev)
 	return 0;
 }
 
+#ifdef CONFIG_SONY_CAM_QCAMERA
+static void msm_eeprom_set_camera_moudle_name(uint8_t id, uint8_t *eeprom_data)
+{
+	memcpy(&camera_module_names[id], eeprom_data, CAMERA_MODULE_NAME_LEN);
+
+	CDBG("MODULE NAME: [id] = %x name=%c%c%c%c%c%c%c%c\n",
+		id, camera_module_names[id][0], camera_module_names[id][1],
+		camera_module_names[id][2], camera_module_names[id][3],
+		camera_module_names[id][4], camera_module_names[id][5],
+		camera_module_names[id][6], camera_module_names[id][7]);
+}
+
+void msm_eeprom_get_camera_moudle_name(uint8_t id, uint8_t *module_name)
+{
+	memcpy(module_name, &camera_module_names[id], CAMERA_MODULE_NAME_LEN);
+}
+#endif
+
 static int32_t msm_eeprom_platform_probe(struct platform_device *pdev)
 {
 	int32_t rc = 0;
 	int32_t j = 0;
 	uint32_t temp;
 
-/*AF DATA S*/	
-	uint16_t infinity_dac_t;
-	uint16_t macro_dac_t;
-	uint16_t starting_dac_t;
-	uint16_t a1=0;
-	uint16_t a2=0;
-/*AF DATA E*/	
 	struct msm_camera_cci_client *cci_client = NULL;
 	struct msm_eeprom_ctrl_t *e_ctrl = NULL;
 	struct msm_eeprom_board_info *eb_info = NULL;
@@ -926,49 +945,11 @@ static int32_t msm_eeprom_platform_probe(struct platform_device *pdev)
 		pr_err("%s line %d\n", __func__, __LINE__);
 	for (j = 0; j < e_ctrl->num_bytes; j++)
 		CDBG("memory_data[%d] = 0x%X\n", j, e_ctrl->memory_data[j]);
-/*AF DATA S*/
-		infinity_dac_t=(uint16_t)(e_ctrl->memory_data[0xD0] << 8) |
-                  e_ctrl->memory_data[0xD1];
-		macro_dac_t=(uint16_t)(e_ctrl->memory_data[0xD4] << 8) |
-                  e_ctrl->memory_data[0xD5];
-/*AF DATA E*/	
-/*Bug1095,guanyi,EEPROM S*/
-/**/
-	if ((e_ctrl->memory_data[0]==0x53)||(e_ctrl->memory_data[0]==0x73)){
-		cci_camera_source = 1;
-/*AF DATA S*/
-		a1=(uint16_t)(e_ctrl->memory_data[0xE0] << 8)|
-	             e_ctrl->memory_data[0xE1];
-		a2=(uint16_t)(e_ctrl->memory_data[0xEA] << 8)|
-	             e_ctrl->memory_data[0xEB];
-	/* (a1/2^6)/(a2/2^13)=(a1*2^7)/a2*/	 
-		starting_dac_t=(infinity_dac_t)-((a1<<7)/a2);
-		pr_err("AF infinity_dac=0x%X, macro_dac=0x%X, starting_dac=0x%X\n",infinity_dac_t,macro_dac_t,starting_dac_t);
-/*AF DATA E*/	
-/*Bug1647,Guanyi,IMX003 QC patch0118*/
-/*Bug1647,Guanyi,IMX004 camera LED over exposure issue*/
-/*Bug1698,Guanyi,IMX005 camera LED over exposure issue, front camera low light*/
-/*Bug1698,Jerry,IMX006 Flash light AWB, Flash light trigger, AF low light(7x7 ASF)*/
-/*Bug1698,Jerry,LI004 Flash light AWB, Flash light trigger, AF low light(7x7 ASF)*/
-/*Bug1895,Jerry,IMX007, LI005 24FPS*/
-/*Bug1961,Jerry,IMX008, LI006 purple sky*/
-/*Jerry, LI007 flash light rolloff, GC005 rolloff and awb*/
-/*Aaron, IMX009, LI008, GC006, WeChat black screen*/
-/*Jenny, Li005, fine tune Liteon again*/
-		pr_err("Camera eeprom 1st IMX009, GC006\n");
-	}
-	else if ((e_ctrl->memory_data[0]==0x4C)||(e_ctrl->memory_data[0]==0x6C)){
-		cci_camera_source = 2;
-/*AF DATA S*/	
-	 starting_dac_t=(uint16_t)(e_ctrl->memory_data[0xD2] << 8) |
-                  e_ctrl->memory_data[0xD3];
-		pr_err("AF infinity_dac=0x%X, macro_dac=0x%X, starting_dac=0x%X\n",infinity_dac_t,macro_dac_t,starting_dac_t);
-/*AF DATA E*/
-		pr_err("Camera eeprom 2st LI005, GC006\n");
-	}
-/**/
-/*Bug1095,guanyi,EEPROM E*/
 
+#ifdef CONFIG_SONY_CAM_QCAMERA
+	msm_eeprom_set_camera_moudle_name(e_ctrl->subdev_id,
+						e_ctrl->memory_data);
+#endif
 
 	rc = msm_camera_power_down(power_info, e_ctrl->eeprom_device_type,
 		&e_ctrl->i2c_client);
