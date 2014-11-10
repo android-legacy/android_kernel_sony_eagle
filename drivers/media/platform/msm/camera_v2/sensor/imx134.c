@@ -13,8 +13,6 @@
 #include "msm_sensor.h"
 #define IMX134_SENSOR_NAME "imx134"
 DEFINE_MSM_MUTEX(imx134_mut);
-#define OPTICAL
-//#define OPTICAL_DEBUG
 
 static struct msm_sensor_ctrl_t imx134_s_ctrl;
 
@@ -37,7 +35,7 @@ static struct msm_sensor_power_setting imx134_power_setting[] = {
 		.config_val = 0,
 		.delay = 0,
 	},
-#if defined(OPTICAL)
+#ifdef CONFIG_SONY_CAM_QCAMERA
 	{/*4. VIF*/
 			.seq_type = SENSOR_GPIO,
 			.seq_val = SENSOR_GPIO_VIO, /*VIF*/
@@ -59,14 +57,13 @@ static struct msm_sensor_power_setting imx134_power_setting[] = {
 	},
 #endif
 
-#if defined(OPTICAL)
+#ifdef CONFIG_SONY_CAM_QCAMERA
 	{/*5. MCLK*/
 		.seq_type = SENSOR_CLK,
 		.seq_val = SENSOR_CAM_MCLK,
 		.config_val = 24000000,
 		.delay = 1,
 	},
-#else//ORG
 #endif
 	{/*6. VAF*/
 		.seq_type = SENSOR_VREG,
@@ -98,8 +95,7 @@ static struct msm_sensor_power_setting imx134_power_setting[] = {
 		.config_val = GPIO_OUT_HIGH,
 		.delay = 1,//250,
 	},
-#if defined(OPTICAL)
-#else//ORG
+#ifndef CONFIG_SONY_CAM_QCAMERA
 	{
 		.seq_type = SENSOR_CLK,
 		.seq_val = SENSOR_CAM_MCLK,
