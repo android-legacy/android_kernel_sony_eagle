@@ -206,9 +206,6 @@ static DEFINE_VDD_REGULATORS(vdd_dig, VDD_DIG_NUM, 1, vdd_corner, NULL);
 #define DIFF_CLK_ID	 7
 #define DIV_CLK1_ID	11
 #define DIV_CLK2_ID	12
-/*[VY52] S Vince T, S Porting for Camera*/
-#define CCI_Camera
-/*[VY52] S Vince T, E Porting for Camera*/
 DEFINE_CLK_RPM_SMD(pnoc_clk, pnoc_a_clk, RPM_BUS_CLK_TYPE, PNOC_ID, NULL);
 DEFINE_CLK_RPM_SMD(snoc_clk, snoc_a_clk, RPM_BUS_CLK_TYPE, SNOC_ID, NULL);
 DEFINE_CLK_RPM_SMD(cnoc_clk, cnoc_a_clk, RPM_BUS_CLK_TYPE, CNOC_ID, NULL);
@@ -3422,11 +3419,7 @@ static struct clk_lookup msm_clocks_8226[] = {
 	CLK_LOOKUP("core_clk", oxili_gfx3d_clk.c, "fd8c4034.qcom,gdsc"),
 
 	/* MM sensor clocks */
-/**/
-#if defined(CCI_Camera)
-	CLK_LOOKUP("cam_src_clk", mclk1_clk_src.c, "42.qcom,camera"), //for gc0339
-#endif
-/**/
+#if !defined(CONFIG_SONY_CAM_QCAMERA)
 	CLK_LOOKUP("cam_src_clk", mclk0_clk_src.c, "6f.qcom,camera"),
 	CLK_LOOKUP("cam_src_clk", mclk0_clk_src.c, "90.qcom,camera"),
 	CLK_LOOKUP("cam_src_clk", mclk0_clk_src.c, "6d.qcom,camera"),
@@ -3439,11 +3432,12 @@ static struct clk_lookup msm_clocks_8226[] = {
 	CLK_LOOKUP("cam_clk", camss_mclk0_clk.c, "6a.qcom,camera"),
 	CLK_LOOKUP("cam_clk", camss_mclk0_clk.c, "6c.qcom,camera"),
 	CLK_LOOKUP("cam_clk", camss_mclk0_clk.c, "20.qcom,camera"),
-/**/
-#if defined(CCI_Camera)
-	CLK_LOOKUP("cam_clk", camss_mclk1_clk.c, "42.qcom,camera"),//for gc0339
+#else
+        CLK_LOOKUP("cam_src_clk", mclk0_clk_src.c, "20.qcom,camera"),
+        CLK_LOOKUP("cam_clk", camss_mclk0_clk.c, "20.qcom,camera"),
+        CLK_LOOKUP("cam_src_clk", mclk1_clk_src.c, "42.qcom,camera"), //for gc0339
+        CLK_LOOKUP("cam_clk", camss_mclk1_clk.c, "42.qcom,camera"),//for gc0339
 #endif
-/**/
 
 	/* eeprom clocks */
 	CLK_LOOKUP("cam_src_clk", mclk0_clk_src.c, "a1.qcom,eeprom"),/*Bug1095,guanyi,EEPROM*/
