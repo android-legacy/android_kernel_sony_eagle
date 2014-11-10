@@ -128,6 +128,13 @@ config IMX134
 		HFR @60fps and @120fps
 		Video HDR support.
 
+config SONY_CAM_QCAMERA
+	bool "SONY camera"
+	depends on MSMB_CAMERA
+	---help---
+		Enable SONY camera patches.
+		This macro is used for SONY patches.
+
 config OV2720
 	bool "Sensor OV2720 (BAYER 2M)"
 	depends on MSMB_CAMERA
