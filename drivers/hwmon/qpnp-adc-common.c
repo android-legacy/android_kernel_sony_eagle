@@ -44,6 +44,7 @@
    and provided to the battery driver in the units desired for
    their framework which is 0.1DegC. True resolution of 0.1DegC
    will result in the below table size to increase by 10 times */
+#ifndef CONFIG_MACH_SONY_EAGLE
 static const struct qpnp_vadc_map_pt adcmap_btm_threshold[] = {
 	{-300,	1642},
 	{-200,	1544},
@@ -129,7 +130,28 @@ static const struct qpnp_vadc_map_pt adcmap_btm_threshold[] = {
 	{780,	208},
 	{790,	203}
 };
-
+#else
+//26.7K
+static const struct qpnp_vadc_map_pt adcmap_btm_threshold[] = {
+	{-200,   1289},
+	{0,    1167},
+	{50,    1122},
+	{100,    1073},
+	{150,   1021},
+	{200,   967},
+	{250,   912},
+	{300,   858},
+	{350,   807},
+	{400,   757},
+	{450,   713},
+	{500,   672},
+	{550,   636},
+	{600,   604},
+	{650,   574},
+	{700,   552},
+	{1000,   461}
+};
+#endif
 static const struct qpnp_vadc_map_pt adcmap_qrd_btm_threshold[] = {
 	{-200,	1540},
 	{-180,	1517},
@@ -620,7 +642,9 @@ int32_t qpnp_adc_scale_batt_therm(struct qpnp_vadc_chip *chip,
 
 	bat_voltage = qpnp_adc_scale_ratiometric_calib(adc_code,
 			adc_properties, chan_properties);
-
+#ifdef CONFIG_MACH_SONY_EAGLE
+	adc_chan_result->measurement = bat_voltage;
+#endif
 	return qpnp_adc_map_temp_voltage(
 			adcmap_btm_threshold,
 			ARRAY_SIZE(adcmap_btm_threshold),

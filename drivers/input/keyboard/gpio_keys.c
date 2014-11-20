@@ -805,9 +805,14 @@ static int gpio_keys_resume(struct device *dev)
 		struct gpio_button_data *bdata = &ddata->data[i];
 		if (bdata->button->wakeup && device_may_wakeup(dev))
 			disable_irq_wake(bdata->irq);
-
+#ifndef CONFIG_MACH_SONY_EAGLE
 		if (gpio_is_valid(bdata->button->gpio))
 			gpio_keys_gpio_report_event(bdata);
+#else
+		 /*Bypass camera snapshot and focus key*/
+		if (gpio_is_valid(bdata->button->gpio) && (bdata->button->gpio!=107 && bdata->button->gpio!=108))
+			gpio_keys_gpio_report_event(bdata);
+#endif
 	}
 	input_sync(ddata->input);
 
