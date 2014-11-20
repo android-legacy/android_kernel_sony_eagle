@@ -190,6 +190,9 @@ static struct device_attribute power_supply_attrs[] = {
 	POWER_SUPPLY_ATTR(model_name),
 	POWER_SUPPLY_ATTR(manufacturer),
 	POWER_SUPPLY_ATTR(serial_number),
+#ifdef CONFIG_MACH_SONY_EAGLE
+	POWER_SUPPLY_ATTR(usb_present),
+#endif
 };
 
 static struct attribute *

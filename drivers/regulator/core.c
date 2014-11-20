@@ -37,6 +37,10 @@
 
 #include "dummy.h"
 
+#ifdef CONFIG_MACH_SONY_EAGLE
+#include <linux/suspend_info.h>
+#endif
+
 #define rdev_crit(rdev, fmt, ...)					\
 	pr_crit("%s: " fmt, rdev_get_name(rdev), ##__VA_ARGS__)
 #define rdev_err(rdev, fmt, ...)					\
@@ -3731,3 +3735,19 @@ unlock:
 	return 0;
 }
 late_initcall(regulator_init_complete);
+#ifdef CONFIG_MACH_SONY_EAGLE
+int regulator_map_list_match(char *suspend_config_regulaotr)
+{
+	struct regulator_dev *rdev;
+
+	list_for_each_entry(rdev, &regulator_list, list) {
+		if (!strcmp(rdev_get_name(rdev) , suspend_config_regulaotr)) {
+			return 1;
+			pr_info("%s: regulator match %s", __func__, rdev_get_name(rdev));
+		}
+	}
+	
+	return 0;
+}
+EXPORT_SYMBOL_GPL(regulator_map_list_match);
+#endif
