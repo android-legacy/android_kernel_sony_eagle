@@ -965,6 +965,7 @@ static struct msm_cam_clk_info cam_8974_clk_info[] = {
 int32_t msm_sensor_power_up(struct msm_sensor_ctrl_t *s_ctrl)
 {
 	int32_t rc = 0, index = 0;
+	int32_t gpiotestnum = 0;
 	struct msm_sensor_power_setting_array *power_setting_array = NULL;
 	struct msm_sensor_power_setting *power_setting = NULL;
 	struct msm_camera_sensor_board_info *data = s_ctrl->sensordata;
@@ -1017,20 +1018,24 @@ int32_t msm_sensor_power_up(struct msm_sensor_ctrl_t *s_ctrl)
 			}
 			break;
 		case SENSOR_GPIO:
-			if (power_setting->seq_val >= SENSOR_GPIO_MAX ||
-				!data->gpio_conf->gpio_num_info) {
-				pr_err("%s gpio index %d >= max %d\n", __func__,
-					power_setting->seq_val,
-					SENSOR_GPIO_MAX);
-				goto power_up_failed;
-			}
-			pr_debug("%s:%d gpio set val %d\n", __func__, __LINE__,
-				data->gpio_conf->gpio_num_info->gpio_num
-				[power_setting->seq_val]);
-			gpio_set_value_cansleep(
-				data->gpio_conf->gpio_num_info->gpio_num
-				[power_setting->seq_val],
-				power_setting->config_val);
+                        if (power_setting->seq_val >= SENSOR_GPIO_MAX ||
+                                !data->gpio_conf->gpio_num_info) {
+                                pr_err("%s gpio index %d >= max %d\n", __func__,
+                                        power_setting->seq_val,
+                                        SENSOR_GPIO_MAX);
+                                continue;
+                        }
+
+                        gpiotestnum = data->gpio_conf->gpio_num_info->gpio_num
+                                        [power_setting->seq_val];
+                        if((gpiotestnum == 69) && (gpio69_count == 2)){
+                                CDBG("[VY5X][CTS]Avoid sub camera preview fail in CTS\n");
+                        }
+                        else {
+                        gpio_set_value_cansleep(
+                                data->gpio_conf->gpio_num_info->gpio_num
+                                [power_setting->seq_val], GPIOF_OUT_INIT_LOW);
+                        }
 			break;
 		case SENSOR_VREG:
 			if (power_setting->seq_val >= CAM_VREG_MAX) {
