@@ -1,0 +1,192 @@
+/include/ "msm8226-yukon_eagle-720p-mtp.dtsi"
+
+&spmi_bus {
+        qcom,pm8226@0 {
+                        spmi-dev-container;
+                        compatible = "qcom,qpnp-charger";
+                        #address-cells = <1>;
+                        #size-cells = <1>;
+                        status = "disabled";
+                        qcom,vddmax-mv = <4210>;
+                        qcom,vddsafe-mv = <4250>;
+                        qcom,vinmin-mv = <4200>;
+                        qcom,vbatdet-delta-mv = <50>;
+                        qcom,ibatmax-ma = <1500>;
+                        qcom,ibatterm-ma = <100>;
+                        qcom,ibatsafe-ma = <1500>;
+                        qcom,thermal-mitigation = <1500 200 100 0>; //[Bug2690] S Jonny_Chan PSM
+                        qcom,resume-soc = <99>;
+                        qcom,power-stage-reduced; //[Bug1926] S Jonny_Chan 01435739
+                        qcom,tchg-sdp-mins = <6000>;
+                        qcom,tchg-dcp-mins = <360>;
+                        qcom,tchg-mins = <150>;
+                        qcom,chg-vadc = <&pm8226_vadc>;
+                        qcom,chg-adc_tm = <&pm8226_adc_tm>;
+                        qcom,pmic-revid = <&pm8226_revid>;
+                        qcom,warm-bat-decidegc = <450>;
+                        qcom,ibatmax-warm-ma = <400>;
+                        qcom,warm-bat-mv = <4000>;
+                        qcom,cool-bat-decidegc = <50>;
+                        qcom,ibatmax-cool-ma = <0>;
+                        qcom,cool-bat-mv = <4000>;
+                        qcom,chgr@1000 {
+                                status = "disabled";
+                                reg = <0x1000 0x100>;
+                                interrupts =    <0x0 0x10 0x0>,
+                                                <0x0 0x10 0x1>,
+                                                <0x0 0x10 0x2>,
+                                                <0x0 0x10 0x3>,
+                                                <0x0 0x10 0x4>,
+                                                <0x0 0x10 0x5>,
+                                                <0x0 0x10 0x6>,
+                                                <0x0 0x10 0x7>;
+
+                                interrupt-names =       "vbat-det-lo",
+                                                        "vbat-det-hi",
+                                                        "chgwdog",
+                                                        "state-change",
+                                                        "trkl-chg-on",
+                                                        "fast-chg-on",
+                                                        "chg-failed",
+                                                        "chg-done";
+                        };
+
+                        qcom,buck@1100 {
+                                status = "disabled";
+                                reg = <0x1100 0x100>;
+                                interrupts =    <0x0 0x11 0x0>,
+                                                <0x0 0x11 0x1>,
+                                                <0x0 0x11 0x2>,
+                                                <0x0 0x11 0x3>,
+                                                <0x0 0x11 0x4>,
+                                                <0x0 0x11 0x5>,
+                                                <0x0 0x11 0x6>;
+
+                                interrupt-names =       "vbat-ov",
+                                                        "vreg-ov",
+                                                        "overtemp",
+                                                        "vchg-loop",
+                                                        "ichg-loop",
+                                                        "ibat-loop",
+                                                        "vdd-loop";
+                        };
+
+                        qcom,chg-misc@1600 {
+                                status = "disabled";
+                                reg = <0x1600 0x100>;
+                        };
+        };
+};
+
+&rpm_bus {
+        rpm-regulator-ldoa5 {
+                regulator-l5 {
+                        regulator-name = "8226_l5";
+                        regulator-min-microvolt = <1050000>;
+                        regulator-max-microvolt = <1050000>;
+                        qcom,init-voltage = <1050000>;
+                        status = "okay";
+                };
+        };
+        rpm-regulator-ldoa27 {
+                regulator-l27 {
+                        regulator-name = "8226_l27";
+                        regulator-min-microvolt = <2100000>;
+                        regulator-max-microvolt = <2100000>;
+                        qcom,init-voltage = <2100000>;
+                        status = "okay";
+                };
+        };
+        rpm-regulator-ldoa28 {
+                regulator-l28 {
+                        regulator-name = "8226_l28";
+                        regulator-min-microvolt = <1800000>;
+                        regulator-max-microvolt = <2950000>;
+                        qcom,init-voltage = <2850000>;
+                        status = "okay";
+                };
+        };
+};
+
+&soc {
+        usb_otg: usb@f9a55000 {
+                compatible = "qcom,hsusb-otg";
+                reg = <0xf9a55000 0x400>;
+                interrupts = <0 134 0>, <0 140 0>;
+                interrupt-names = "core_irq", "async_irq";
+                hsusb_vdd_dig-supply = <&pm8226_s1_corner>;
+                HSUSB_1p8-supply = <&pm8226_l10>;
+                HSUSB_3p3-supply = <&pm8226_l20>;
+                qcom,vdd-voltage-level = <1 5 7>;
+
+                qcom,hsusb-otg-phy-init-seq =
+                        <0x44 0x80 0x68 0x81 0x24 0x82 0x13 0x83 0xffffffff>;
+                qcom,hsusb-otg-phy-type = <2>;
+                qcom,hsusb-otg-mode = <1>;
+                qcom,hsusb-otg-otg-control = <2>;
+                qcom,hsusb-otg-disable-reset;
+                qcom,dp-manual-pullup;
+                qcom,usbin-vadc = <&pm8226_vadc>;
+
+                qcom,msm-bus,name = "usb";
+                qcom,msm-bus,num-cases = <3>;
+                qcom,msm-bus,num-paths = <1>;
+                qcom,msm-bus,vectors-KBps =
+                                <87 512 0 0>,
+                                <87 512 60000 960000>,
+                                <87 512 6000  6000>;
+        };
+
+        i2c_1: i2c@f9924000 { /* BLSP-1 QUP-2 */
+                cell-index = <1>;
+                compatible = "qcom,i2c-qup";
+                reg = <0xf9924000 0x1000>;
+                #address-cells = <1>;
+                #size-cells = <0>;
+                reg-names = "qup_phys_addr";
+                interrupts = <0 96 0>;
+                interrupt-names = "qup_err_intr";
+                qcom,i2c-bus-freq = <384000>;
+                qcom,i2c-src-freq = <19200000>;
+        };
+
+
+       i2c@f9925000 { /* BLSP-1 QUP-3 */
+       nfc547@28 {
+                        compatible = "nxp,pn547";
+                        reg = <0x28>;
+                        gpios = <&msmgpio 20 0>, <&msmgpio 22>;
+                        interrupt-parent = <&msmgpio> ;
+                        interrupts = <21 0x2>;
+                        ven-gpio = <&msmgpio 20 0x00>;
+                        irq-gpio = <&msmgpio 21 0x00>;
+                        dl-gpio = <&msmgpio 22 0x00>;
+
+                };
+       };
+
+        spi_0: spi@f9923000 { /* BLSP1 QUP1 */
+                compatible = "qcom,spi-qup-v2";
+                #address-cells = <1>;
+                #size-cells = <0>;
+                reg-names = "spi_physical", "spi_bam_physical";
+                reg = <0xf9923000 0x1000>,
+                      <0xf9904000 0xF000>;
+                interrupt-names = "spi_irq", "spi_bam_irq";
+                interrupts = <0 95 0>, <0 238 0>;
+                spi-max-frequency = <19200000>;
+
+                qcom,gpio-mosi = <&msmgpio 0 0>;
+                qcom,gpio-miso = <&msmgpio 1 0>;
+                qcom,gpio-clk  = <&msmgpio 3 0>;
+                qcom,gpio-cs0  = <&msmgpio 22 0>;
+
+                qcom,infinite-mode = <0>;
+                qcom,use-bam;
+                qcom,ver-reg-exists;
+                qcom,bam-consumer-pipe-index = <12>;
+                qcom,bam-producer-pipe-index = <13>;
+                qcom,master-id = <86>;
+                status = "disabled";
+        };
+};
