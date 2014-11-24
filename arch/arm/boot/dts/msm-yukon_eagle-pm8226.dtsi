@@ -1,0 +1,92 @@
+/* Copyright (c) 2012-2014, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+/include/ "msm8226-yukon_eagle-regulator.dtsi"
+
+&spmi_bus {
+	qcom,pm8226@0 {
+		qcom,charger {
+			qcom,vddmax-mv = <4210>;
+			qcom,vddsafe-mv = <4250>;
+			qcom,vinmin-mv = <4200>;
+			qcom,vbatdet-delta-mv = <50>;
+			qcom,ibatmax-ma = <1500>;
+			qcom,ibatterm-ma = <100>;
+			qcom,ibatsafe-ma = <1500>;
+			qcom,thermal-mitigation = <1500 200 100 0>;
+			qcom,resume-soc = <99>;
+			qcom,power-stage-reduced;
+			qcom,tchg-sdp-mins = <6000>;
+			qcom,tchg-dcp-mins = <360>;
+			qcom,tchg-mins = <150>;
+			qcom,chg-vadc = <&pm8226_vadc>;
+			qcom,chg-adc_tm = <&pm8226_adc_tm>;
+			qcom,pmic-revid = <&pm8226_revid>;
+			qcom,warm-bat-decidegc = <450>;
+			qcom,ibatmax-warm-ma = <400>;
+			qcom,warm-bat-mv = <4000>;
+			qcom,cool-bat-decidegc = <50>;
+			qcom,ibatmax-cool-ma = <0>;
+			qcom,cool-bat-mv = <4000>;
+		};
+	};
+
+	qcom,bms {
+			qcom,r-sense-uohm = <10000>;
+			qcom,v-cutoff-uv = <3000000>;
+			qcom,max-voltage-uv = <4250000>;
+			qcom,r-conn-mohm = <0>;
+			qcom,shutdown-soc-valid-limit = <100>;
+			qcom,adjust-soc-low-threshold = <15>;
+			qcom,ocv-voltage-high-threshold-uv = <3750000>;
+			qcom,ocv-voltage-low-threshold-uv = <3650000>;
+			qcom,low-soc-calculate-soc-threshold = <15>;
+			qcom,low-voltage-calculate-soc-ms = <1000>;
+			qcom,low-soc-calculate-soc-ms = <5000>;
+			qcom,calculate-soc-ms = <20000>;
+			qcom,chg-term-ua = <100000>;
+			qcom,batt-type = <3>;
+			qcom,tm-temp-margin = <5000>;
+			qcom,low-ocv-correction-limit-uv = <100>;
+			qcom,high-ocv-correction-limit-uv = <250>;
+			qcom,hold-soc-est = <3>;
+			qcom,low-voltage-threshold = <3420000>;
+			qcom,bms-vadc = <&pm8226_vadc>;
+			qcom,bms-iadc = <&pm8226_iadc>;
+			qcom,bms-adc_tm = <&pm8226_adc_tm>;
+			qcom,use-external-rsense;
+	};
+
+	qcom,pm8226@0 {
+		qcom,leds@d300 {
+			qcom,flash_0 {
+				qcom,max-current = <1000>;
+				qcom,default-state = "off";
+				qcom,headroom = <3>;
+				qcom,duration = <1280>;
+				qcom,clamp-curr = <200>;
+				qcom,startup-dly = <3>;
+				qcom,safety-timer;
+				label = "flash";
+				linux,default-trigger =
+						"flash0_trigger";
+				qcom,id = <1>;
+				linux,name = "led:flash_0";
+				qcom,current = <750>;
+			};
+		};
+	};
+};
+
+&pm8226_chg {
+        qcom,battery-data = <&mtp_batterydata>;
+};
