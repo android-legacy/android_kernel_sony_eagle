@@ -1319,11 +1319,10 @@ static int msm_isp_stop_axi_stream(struct vfe_device *vfe_dev,
 #endif
 		}
 #ifdef CONFIG_MACH_SONY_EAGLE
-		vfe_dev->hw_info->vfe_ops.core_ops.reset_hw(vfe_dev, ISP_RST_SOFT, 1);
+		vfe_dev->hw_info->vfe_ops.core_ops.reset_hw(vfe_dev, ISP_RST_HARD, 1);
 #else
-		vfe_dev->hw_info->vfe_ops.core_ops.reset_hw(vfe_dev, ISP_RST_SOFT);
+		vfe_dev->hw_info->vfe_ops.core_ops.reset_hw(vfe_dev, ISP_RST_HARD);
 #endif
-		vfe_dev->hw_info->vfe_ops.core_ops.init_hw_reg(vfe_dev);
 	}
 
 	for (i = 0; i < stream_cfg_cmd->num_streams; i++) {

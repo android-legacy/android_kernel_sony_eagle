@@ -80,20 +80,36 @@ static int mdss_mdp_overlay_sd_ctrl(struct msm_fb_data_type *mfd,
 	return resp;
 }
 
+static struct mdss_mdp_pipe *__overlay_find_pipe(
+		struct msm_fb_data_type *mfd, u32 ndx)
+{
+	struct mdss_overlay_private *mdp5_data = mfd_to_mdp5_data(mfd);
+	struct mdss_mdp_pipe *tmp, *pipe = NULL;
+
+	mutex_lock(&mfd->lock);
+	list_for_each_entry(tmp, &mdp5_data->pipes_used, used_list) {
+		if (tmp->ndx == ndx) {
+			pipe = tmp;
+			break;
+		}
+	}
+	mutex_unlock(&mfd->lock);
+
+	return pipe;
+}
+
 static int mdss_mdp_overlay_get(struct msm_fb_data_type *mfd,
 				struct mdp_overlay *req)
 {
 	struct mdss_mdp_pipe *pipe;
-	struct mdss_data_type *mdata = mfd_to_mdata(mfd);
 
-	pipe = mdss_mdp_pipe_get(mdata, req->id);
-	if (IS_ERR_OR_NULL(pipe)) {
+	pipe = __overlay_find_pipe(mfd, req->id);
+	if (!pipe) {
 		pr_err("invalid pipe ndx=%x\n", req->id);
 		return pipe ? PTR_ERR(pipe) : -ENODEV;
 	}
 
 	*req = pipe->req_data;
-	mdss_mdp_pipe_unmap(pipe);
 
 	return 0;
 }
@@ -266,7 +282,7 @@ static int __mdp_pipe_tune_perf(struct mdss_mdp_pipe *pipe)
 	int rc;
 
 	for (;;) {
-		rc = mdss_mdp_perf_calc_pipe(pipe, &perf, NULL);
+		rc = mdss_mdp_perf_calc_pipe(pipe, &perf, NULL, true);
 
 		if (!rc && (perf.mdp_clk_rate <= mdata->max_mdp_clk_rate))
 			break;
@@ -319,10 +335,6 @@ static int __mdss_mdp_overlay_setup_scaling(struct mdss_mdp_pipe *pipe)
 				rc, src, pipe->dst.h);
 		return rc;
 	}
-	pipe->scale.init_phase_x[0] = (pipe->scale.phase_step_x[0] -
-					(1 << PHASE_STEP_SHIFT)) / 2;
-	pipe->scale.init_phase_y[0] = (pipe->scale.phase_step_y[0] -
-					(1 << PHASE_STEP_SHIFT)) / 2;
 	return rc;
 }
 
@@ -447,10 +459,17 @@ static int mdss_mdp_overlay_pipe_setup(struct msm_fb_data_type *mfd,
 		pipe->pid = current->tgid;
 		pipe->play_cnt = 0;
 	} else {
-		pipe = mdss_mdp_pipe_get(mdp5_data->mdata, req->id);
-		if (IS_ERR_OR_NULL(pipe)) {
+		pipe = __overlay_find_pipe(mfd, req->id);
+		if (!pipe) {
 			pr_err("invalid pipe ndx=%x\n", req->id);
-			return pipe ? PTR_ERR(pipe) : -ENODEV;
+			return -ENODEV;
+		}
+
+		ret = mdss_mdp_pipe_map(pipe);
+		if (IS_ERR_VALUE(ret)) {
+			pr_err("Unable to map used pipe%d ndx=%x\n",
+					pipe->num, pipe->ndx);
+			return ret;
 		}
 
 		if (pipe->mixer != mixer) {
@@ -1269,10 +1288,17 @@ static int mdss_mdp_overlay_queue(struct msm_fb_data_type *mfd,
 	u32 flags;
 	struct mdss_data_type *mdata = mfd_to_mdata(mfd);
 
-	pipe = mdss_mdp_pipe_get(mdata, req->id);
-	if (IS_ERR_OR_NULL(pipe)) {
+	pipe = __overlay_find_pipe(mfd, req->id);
+	if (!pipe) {
 		pr_err("pipe ndx=%x doesn't exist\n", req->id);
-		return pipe ? PTR_ERR(pipe) : -ENODEV;
+		return -ENODEV;
+	}
+
+	ret = mdss_mdp_pipe_map(pipe);
+	if (IS_ERR_VALUE(ret)) {
+		pr_err("Unable to map used pipe%d ndx=%x\n",
+				pipe->num, pipe->ndx);
+		return ret;
 	}
 
 	pr_debug("ov queue pnum=%d\n", pipe->num);
@@ -1330,8 +1356,13 @@ static void mdss_mdp_overlay_force_dma_cleanup(struct mdss_data_type *mdata)
 
 	for (i = 0; i < mdata->ndma_pipes; i++) {
 		pipe = mdata->dma_pipes + i;
-		if (atomic_read(&pipe->ref_cnt) && pipe->mfd)
-			mdss_mdp_overlay_force_cleanup(pipe->mfd);
+
+		if (!mdss_mdp_pipe_map(pipe)) {
+			struct msm_fb_data_type *mfd = pipe->mfd;
+			mdss_mdp_pipe_unmap(pipe);
+			if (mfd)
+				mdss_mdp_overlay_force_cleanup(mfd);
+		}
 	}
 }
 
