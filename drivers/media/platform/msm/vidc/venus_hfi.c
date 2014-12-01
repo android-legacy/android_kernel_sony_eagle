@@ -105,6 +105,9 @@ static inline void venus_hfi_disable_unprepare_clks(
 static unsigned long venus_hfi_get_clock_rate(struct venus_core_clock *clock,
 		int num_mbs_per_sec);
 
+static unsigned long venus_hfi_get_clock_rate(struct venus_core_clock *clock,
+		int num_mbs_per_sec);
+
 static void venus_hfi_dump_packet(u8 *packet)
 {
 	u32 c = 0, packet_size = *(u32 *)packet;
@@ -1111,6 +1114,14 @@ static inline void venus_hfi_clk_disable(struct venus_hfi_device *device)
 		dprintk(VIDC_DBG, "Clocks already disabled");
 		return;
 	}
+
+	/* We get better power savings if we lower the venus core clock to the
+	 * lowest level before disabling it. */
+	rc = clk_set_rate(device->resources.clock[VCODEC_CLK].clk,
+			venus_hfi_get_clock_rate(
+			&device->resources.clock[VCODEC_CLK], 0));
+	if (rc)
+		dprintk(VIDC_WARN, "Failed to set clock rate to min: %d\n", rc);
 
 	/* We get better power savings if we lower the venus core clock to the
 	 * lowest level before disabling it. */
@@ -3518,6 +3529,25 @@ static int protect_cp_mem(struct venus_hfi_device *device)
 	return rc;
 }
 
+static int venus_hfi_suspend(void *dev)
+{
+	int rc = 0;
+	struct venus_hfi_device *device = (struct venus_hfi_device *) dev;
+
+	if (!device) {
+		dprintk(VIDC_ERR, "%s invalid device\n", __func__);
+		return -EINVAL;
+	}
+	dprintk(VIDC_INFO, "%s\n", __func__);
+
+	if (device->power_enabled) {
+		venus_hfi_try_clk_gating(device);
+		rc = flush_delayed_work(&venus_hfi_pm_work);
+		dprintk(VIDC_INFO, "%s flush delayed work %d\n", __func__, rc);
+	}
+	return 0;
+}
+
 static int venus_hfi_load_fw(void *dev)
 {
 	int rc = 0;
@@ -3968,6 +3998,7 @@ static void venus_init_hfi_callbacks(struct hfi_device *hdev)
 	hdev->get_core_capabilities = venus_hfi_get_core_capabilities;
 	hdev->capability_check = venus_hfi_capability_check;
 	hdev->power_enable = venus_hfi_power_enable;
+	hdev->suspend = venus_hfi_suspend;
 }
 
 int venus_hfi_initialize(struct hfi_device *hdev, u32 device_id,
