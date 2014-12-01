@@ -425,4 +425,8 @@ int mdss_dsi_panel_init(struct device_node *node,
 #ifdef CONFIG_MACH_SONY_SEAGULL
 unsigned char mdss_manufacture_id_read(void);
 #endif
+
+int mdss_dsi_register_recovery_handler(struct mdss_dsi_ctrl_pdata *ctrl,
+		struct mdss_panel_recovery *recovery);
+
 #endif /* MDSS_DSI_H */
