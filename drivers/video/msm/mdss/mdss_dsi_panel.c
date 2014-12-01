@@ -288,7 +288,6 @@ int mdss_dsi_panel_reset(struct mdss_panel_data *pdata, int enable)
 {
 	struct mdss_dsi_ctrl_pdata *ctrl_pdata = NULL;
 	struct mdss_panel_info *pinfo = NULL;
-	static bool gpio_request_done;
 #ifndef CONFIG_MACH_SONY_FLAMINGO
 /* [Flamingo] LCM driver porting */
 	int i, rc = 0;
@@ -316,71 +315,24 @@ int mdss_dsi_panel_reset(struct mdss_panel_data *pdata, int enable)
 	pr_debug("%s: enable = %d\n", __func__, enable);
 	pinfo = &(ctrl_pdata->panel_data.panel_info);
 
-	if (!gpio_request_done && enable) {
+	if (enable) {
 		rc = mdss_dsi_request_gpios(ctrl_pdata);
 		if (rc) {
 			pr_err("gpio request failed\n");
 			return rc;
 		}
-		gpio_request_done = true;
-	}
+		if (!pinfo->panel_power_on) {
+			if (gpio_is_valid(ctrl_pdata->disp_en_gpio))
+				gpio_set_value((ctrl_pdata->disp_en_gpio), 1);
 
-	if (enable) {
-#ifdef CONFIG_MACH_SONY_SEAGULL
-		if (gpio_is_valid(ctrl_pdata->disp_en_gpio))
-			gpio_direction_output((ctrl_pdata->disp_en_gpio) , 1);
-		msleep(1);
-		if (gpio_is_valid(ctrl_pdata->disp_p5_gpio))
-			gpio_direction_output((ctrl_pdata->disp_p5_gpio) , 1);
-		msleep(1);
-		if (gpio_is_valid(ctrl_pdata->disp_n5_gpio))
-			gpio_direction_output((ctrl_pdata->disp_n5_gpio) , 1);
+			for (i = 0; i < pdata->panel_info.rst_seq_len; ++i) {
+				gpio_set_value((ctrl_pdata->rst_gpio),
+					pdata->panel_info.rst_seq[i]);
+				if (pdata->panel_info.rst_seq[++i])
+					usleep(pinfo->rst_seq[i] * 1000);
+			}
 
-		if (ctrl_pdata->ctrl_state & CTRL_STATE_PANEL_INIT) {
-			pr_debug("%s: Panel Not properly turned OFF\n",
-						__func__);
-			ctrl_pdata->ctrl_state &= ~CTRL_STATE_PANEL_INIT;
-			pr_debug("%s: Reset panel done\n", __func__);
 		}
-
-		msleep(10);
-		gpio_direction_output((ctrl_pdata->rst_gpio) , 1);
-		msleep(150);
-	} else {
-		gpio_direction_output((ctrl_pdata->rst_gpio), 0);
-		msleep(1);
-		if (gpio_is_valid(ctrl_pdata->disp_n5_gpio))
-			gpio_direction_output((ctrl_pdata->disp_n5_gpio) , 0);
-		msleep(1);
-		if (gpio_is_valid(ctrl_pdata->disp_p5_gpio))
-			gpio_direction_output((ctrl_pdata->disp_p5_gpio) , 0);
-		msleep(1);
-		if (gpio_is_valid(ctrl_pdata->disp_en_gpio))
-			gpio_direction_output((ctrl_pdata->disp_en_gpio), 0);
-		msleep(10);
-	}
-#else
-#ifdef CONFIG_MACH_SONY_FLAMINGO
-/*[Flamingo] LCM driver porting */
-		gpio_direction_output(SYSTEM_RESET_PIN_TS, 0);	//Touch Screen Reset Pin as Low
-		gpio_set_value((ctrl_pdata->rst_gpio), 1);
-		msleep(10);
-		gpio_set_value((ctrl_pdata->rst_gpio), 0);
-		msleep(10);
-		gpio_set_value((ctrl_pdata->rst_gpio), 1);
-		gpio_direction_output(SYSTEM_RESET_PIN_TS, 1);	//Touch Screen Reset Pin as High
-		msleep(120);
-#else
-		if (gpio_is_valid(ctrl_pdata->disp_en_gpio))
-			gpio_set_value((ctrl_pdata->disp_en_gpio), 1);
-
-		for (i = 0; i < pdata->panel_info.rst_seq_len; ++i) {
-			gpio_set_value((ctrl_pdata->rst_gpio),
-				pdata->panel_info.rst_seq[i]);
-			if (pdata->panel_info.rst_seq[++i])
-				usleep(pdata->panel_info.rst_seq[i] * 1000);
-		}
-#endif
 
 		if (gpio_is_valid(ctrl_pdata->mode_gpio)) {
 			if (pinfo->mode_gpio_state == MODE_GPIO_HIGH)
@@ -403,9 +355,7 @@ int mdss_dsi_panel_reset(struct mdss_panel_data *pdata, int enable)
 		gpio_free(ctrl_pdata->rst_gpio);
 		if (gpio_is_valid(ctrl_pdata->mode_gpio))
 			gpio_free(ctrl_pdata->mode_gpio);
-		gpio_request_done = false;
 	}
-#endif
 	return rc;
 }
 
