@@ -342,12 +342,6 @@ static int get_hfi_extradata_index(enum hal_extradata_id index)
 	case HAL_EXTRADATA_RECOVERY_POINT_SEI:
 		ret = HFI_PROPERTY_PARAM_VDEC_RECOVERY_POINT_SEI_EXTRADATA;
 		break;
-	case HAL_EXTRADATA_CLOSED_CAPTION_UD:
-		ret = HFI_PROPERTY_PARAM_VDEC_CLOSED_CAPTION_EXTRADATA;
-		break;
-	case HAL_EXTRADATA_AFD_UD:
-		ret = HFI_PROPERTY_PARAM_VDEC_AFD_EXTRADATA;
-		break;
 	case HAL_EXTRADATA_MULTISLICE_INFO:
 		ret = HFI_PROPERTY_PARAM_VENC_MULTI_SLICE_INFO;
 		break;
@@ -371,6 +365,9 @@ static int get_hfi_extradata_index(enum hal_extradata_id index)
 		break;
 	case HAL_EXTRADATA_METADATA_MBI:
 		ret = HFI_PROPERTY_PARAM_VENC_MBI_DUMPING;
+		break;
+	case HAL_EXTRADATA_STREAM_USERDATA:
+		ret = HFI_PROPERTY_PARAM_VDEC_STREAM_USERDATA_EXTRADATA;
 		break;
 	default:
 		dprintk(VIDC_WARN, "Extradata index not found: %d\n", index);
@@ -1479,10 +1476,18 @@ int create_pkt_cmd_session_set_property(
 		pr_err("MARK LTR\n");
 		break;
 	}
-	case HAL_PARAM_VENC_HIER_P_NUM_FRAMES:
+	case HAL_PARAM_VENC_HIER_P_MAX_ENH_LAYERS:
 	{
 		pkt->rg_property_data[0] =
-			HFI_PROPERTY_PARAM_VENC_HIER_P_NUM_ENH_LAYER;
+			HFI_PROPERTY_PARAM_VENC_HIER_P_MAX_NUM_ENH_LAYER;
+		pkt->rg_property_data[1] = *(u32 *)pdata;
+		pkt->size += sizeof(u32) * 2;
+		break;
+	}
+	case HAL_CONFIG_VENC_HIER_P_NUM_FRAMES:
+	{
+		pkt->rg_property_data[0] =
+			HFI_PROPERTY_CONFIG_VENC_HIER_P_ENH_LAYER;
 		pkt->rg_property_data[1] = *(u32 *)pdata;
 		pkt->size += sizeof(u32) * 2;
 		break;
