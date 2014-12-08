@@ -3292,35 +3292,6 @@ qpnp_chg_vddtrim_get(struct qpnp_chg_chip *chip, int *trim_mv)
 	return 0;
 }
 
-static int
-qpnp_chg_smbb_frequency_1p6MHz_set(struct qpnp_chg_chip *chip)
-{
-	int rc = 0;
-
-	/* frequency 1.6MHz */
-	rc = qpnp_chg_masked_write(chip, chip->chgr_base + 0x750,
-		0xFF, 0x0B, 1);
-	if (rc) {
-		pr_err("failed setting frequency 1.6MHz rc=%d\n", rc);
-		goto out;
-	}
-
-	/* max duty unlimit */
-	rc = qpnp_chg_masked_write(chip, chip->chgr_base + 0x1D0,
-		0xFF, 0xA5, 1);
-	if (rc) {
-		pr_err("failed setting max duty unlimit 0x11D0 rc=%d\n", rc);
-		goto out;
-	}
-	rc = qpnp_chg_masked_write(chip, chip->chgr_base + 0x1E6,
-		0xFF, 0x00, 1);
-	if (rc)
-		pr_err("failed setting max duty unlimit 0x11E6 rc=%d\n", rc);
-
-out:
-	return rc;
-}
-
 static void
 check_unplug_wakelock(struct qpnp_chg_chip *chip)
 {
