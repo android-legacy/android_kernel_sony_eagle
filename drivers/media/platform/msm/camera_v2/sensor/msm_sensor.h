@@ -61,6 +61,9 @@ struct msm_sensor_ctrl_t {
 	struct msm_sensor_packed_cfg_t *cfg_override;
 	struct msm_sd_subdev msm_sd;
 	enum cci_i2c_master_t cci_i2c_master;
+#ifdef CONFIG_MACH_SONY_EAGLE
+        struct device *dev;
+#endif
 
 	struct msm_camera_i2c_client *sensor_i2c_client;
 	struct v4l2_subdev_info *sensor_v4l2_subdev_info;
