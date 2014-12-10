@@ -25,6 +25,10 @@
 #define CDBG(fmt, args...) pr_debug(fmt, ##args)
 #endif
 
+#ifdef CONFIG_MACH_SONY_EAGLE
+int cci_camera_source = 0;
+#endif
+
 DEFINE_MSM_MUTEX(msm_eeprom_mutex);
 
 
@@ -340,6 +344,17 @@ static int read_eeprom_memory(struct msm_eeprom_ctrl_t *e_ctrl,
 			}
 			memptr += emap[j].mem.valid_size;
 		}
+#ifdef CONFIG_MACH_SONY_EAGLE
+		/*Bug1095,guanyi,EEPROM S*/
+		if(j==0){/*After A1 for AWB and AF,A3 A5 A7 for lsc*/
+			eb_info->i2c_slaveaddr=0xA3;
+			e_ctrl->i2c_client.cci_client->sid = eb_info->i2c_slaveaddr >> 1;
+		}
+		else{
+			eb_info->i2c_slaveaddr=eb_info->i2c_slaveaddr+2;
+			e_ctrl->i2c_client.cci_client->sid = eb_info->i2c_slaveaddr >> 1;
+		}
+#endif
 		if (emap[j].pageen.valid_size) {
 			e_ctrl->i2c_client.addr_type = emap[j].pageen.addr_t;
 			rc = e_ctrl->i2c_client.i2c_func_tbl->i2c_write(
@@ -1029,8 +1044,8 @@ static int msm_eeprom_platform_probe(struct platform_device *pdev)
 	for (j = 0; j < e_ctrl->cal_data.num_data; j++)
 		CDBG("memory_data[%d] = 0x%X\n", j,
 		     e_ctrl->cal_data.mapdata[j]);
-	e_ctrl->is_supported |= msm_eeprom_match_crc(&e_ctrl->cal_data);
 
+	e_ctrl->is_supported |= msm_eeprom_match_crc(&e_ctrl->cal_data);
 	rc = msm_camera_power_down(power_info, e_ctrl->eeprom_device_type,
 		&e_ctrl->i2c_client);
 	if (rc) {
