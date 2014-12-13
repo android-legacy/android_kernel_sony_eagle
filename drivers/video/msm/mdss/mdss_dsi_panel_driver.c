@@ -202,7 +202,16 @@ u32 mdss_dsi_panel_cmd_read(struct mdss_dsi_ctrl_pdata *ctrl, char cmd0,
 	cmdreq.flags = CMD_REQ_RX | CMD_REQ_COMMIT;
 	cmdreq.rlen = len;
 	cmdreq.rbuf = ctrl->rx_buf.data;
-	cmdreq.cb = fxn; /* call back */
+	cmdreq.cb = NULL; /* call back */
+
+
+	if (!alt_panelid_cmd) {
+		cmdreq.cmds = &dcs_read_cmd;
+	} else {
+		cmdreq.cmds = &dcs_read_cmd_DA;
+		cmdreq.cb = panel_id_store;
+	}
+
 	mdss_dsi_cmdlist_put(ctrl, &cmdreq);
 	/*
 	 * blocked here, until call back called
