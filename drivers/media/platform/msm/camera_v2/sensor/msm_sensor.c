@@ -1213,12 +1213,18 @@ int32_t msm_sensor_platform_probe(struct platform_device *pdev, void *data)
 	int rc = 0;
 	struct msm_sensor_ctrl_t *s_ctrl =
 		(struct msm_sensor_ctrl_t *)data;
+#ifdef CONFIG_MACH_SONY_EAGLE
+	struct msm_camera_power_ctrl_t *power_info =
+		(struct msm_camera_power_ctrl_t *)data;
+#endif
 	struct msm_camera_cci_client *cci_client = NULL;
 	uint32_t session_id;
 	unsigned long mount_pos;
 
 	s_ctrl->pdev = pdev;
-
+#ifdef CONFIG_MACH_SONY_EAGLE
+	power_info->dev = &pdev->dev;
+#endif
 	CDBG("%s called data %p\n", __func__, data);
 	CDBG("%s pdev name %s\n", __func__, pdev->id_entry->name);
 	if (pdev->dev.of_node) {
@@ -1336,7 +1342,7 @@ int32_t msm_sensor_platform_probe(struct platform_device *pdev, void *data)
 #ifdef CONFIG_MACH_SONY_EAGLE
   CDBG("[Vince Debug] Pin Function create Function Enter\t%s:%d\n", __func__, __LINE__);
   {
-      if(device_create_file(&(pdev->dev), &dev_attr_CheckCameraID))
+      if(device_create_file(power_info->dev, &dev_attr_CheckCameraID))
       {
           pr_err("[Vince Debug] Ping Function create fail!!\t%s:%d\n", __func__, __LINE__);
       }
