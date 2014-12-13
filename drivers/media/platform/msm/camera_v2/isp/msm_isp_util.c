@@ -1045,7 +1045,11 @@ static inline void msm_isp_process_overflow_irq(
 			&vfe_dev->error_info.overflow_recover_irq_mask1);
 		/*Stop CAMIF Immediately*/
 		vfe_dev->hw_info->vfe_ops.core_ops.
+#ifndef CONFIG_MACH_SONY_EAGLE
 			update_camif_state(vfe_dev, DISABLE_CAMIF_IMMEDIATELY);
+#else
+			update_camif_state(vfe_dev, DISABLE_CAMIF_IMMEDIATELY_VFE_RECOVER);
+#endif
 		/*Halt the hardware & Clear all other IRQ mask*/
 		vfe_dev->hw_info->vfe_ops.axi_ops.halt(vfe_dev, 0);
 		/*Update overflow state*/
@@ -1141,6 +1145,10 @@ irqreturn_t msm_isp_process_irq(int irq_num, void *data)
 
 	vfe_dev->hw_info->vfe_ops.irq_ops.
 		read_irq_status(vfe_dev, &irq_status0, &irq_status1);
+#ifdef CONFIG_MACH_SONY_EAGLE
+	msm_isp_process_overflow_irq(vfe_dev,
+		&irq_status0, &irq_status1);
+#endif
 	if ((irq_status0 == 0) && (irq_status1 == 0)) {
 		pr_err_ratelimited("%s: irq_status0 & 1 are both 0\n",
 			__func__);
