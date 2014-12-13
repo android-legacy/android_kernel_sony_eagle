@@ -81,11 +81,22 @@ struct msm_camera_sensor_board_info {
 	const char *eeprom_name;
 	const char *actuator_name;
 	struct msm_camera_slave_info *slave_info;
+#ifdef CONFIG_MACH_SONY_EAGLE
+	struct camera_vreg_t *cam_vreg;
+	int num_vreg;
+#endif
 	struct msm_camera_csi_lane_params *csi_lane_params;
 	struct msm_camera_sensor_strobe_flash_data *strobe_flash_data;
 	struct msm_actuator_info *actuator_info;
 	struct msm_sensor_info_t *sensor_info;
+#ifdef CONFIG_MACH_SONY_EAGLE
+	struct msm_camera_gpio_conf *gpio_conf;
+#endif
 	const char *misc_regulator;
+#ifdef CONFIG_MACH_SONY_EAGLE
+	struct msm_camera_i2c_conf *i2c_conf;
+	struct msm_sensor_init_params *sensor_init_params;
+#endif
 	struct msm_camera_power_ctrl_t power_info;
 	struct msm_camera_sensor_slave_info *cam_slave_info;
 };
@@ -119,6 +130,15 @@ struct eeprom_map_t {
 	uint32_t delay;
 };
 
+#ifdef CONFIG_MACH_SONY_EAGLE
+struct eeprom_memory_map_t {
+	struct eeprom_map_t page;
+	struct eeprom_map_t pageen;
+	struct eeprom_map_t poll;
+	struct eeprom_map_t mem;
+};
+#endif
+
 struct eeprom_slave_add_t {
 	uint32_t addr;
 };
@@ -150,6 +170,10 @@ struct msm_eeprom_board_info {
 	uint16_t i2c_slaveaddr;
 	struct msm_camera_power_ctrl_t power_info;
 	struct msm_eeprom_mm_t mm_data;
+#ifdef CONFIG_MACH_SONY_EAGLE
+	uint32_t num_blocks;
+	struct eeprom_memory_map_t *eeprom_map;
+#endif
 };
 
 #endif

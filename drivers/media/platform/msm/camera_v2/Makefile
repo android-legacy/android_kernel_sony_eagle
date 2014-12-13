@@ -10,7 +10,11 @@ ccflags-y += -Idrivers/media/platform/msm/camera_v2/jpeg_10
 obj-$(CONFIG_MSMB_CAMERA) += msm.o
 obj-$(CONFIG_MSMB_CAMERA) += camera/
 obj-$(CONFIG_MSMB_CAMERA) += msm_vb2/
+ifneq ($(CONFIG_MACH_SONY_EAGLE),y)
 obj-$(CONFIG_MSMB_CAMERA) += sensor/
+else
+obj-$(CONFIG_MSMB_CAMERA) += sensor_eagle/
+endif
 obj-$(CONFIG_MSMB_CAMERA) += isp/
 obj-$(CONFIG_MSMB_CAMERA) += ispif/
 obj-$(CONFIG_MSMB_JPEG) += jpeg_10/
