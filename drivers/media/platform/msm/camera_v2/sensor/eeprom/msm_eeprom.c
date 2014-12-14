@@ -1056,7 +1056,6 @@ static int msm_eeprom_platform_probe(struct platform_device *pdev)
 		     e_ctrl->cal_data.mapdata[j]);
 
 	e_ctrl->is_supported |= msm_eeprom_match_crc(&e_ctrl->cal_data);
-		pr_err("%s line %d\n", __func__, __LINE__);
 #ifdef CONFIG_MACH_SONY_EAGLE
                 infinity_dac_t=(uint16_t)(e_ctrl->cal_data.mapdata[0xD0] << 8) |
                   e_ctrl->cal_data.mapdata[0xD1];
