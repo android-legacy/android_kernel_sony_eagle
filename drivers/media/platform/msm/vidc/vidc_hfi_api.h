@@ -1167,6 +1167,8 @@ struct hfi_device {
 		int height,	int *stride, int *scanlines);
 	int (*session_clean)(void *sess);
 	int (*get_core_capabilities)(void);
+        int (*capability_check)(u32 fourcc, u32 width,
+                        u32 *max_width, u32 *max_height);
 	int (*power_enable)(void *dev);
 	int (*suspend)(void *dev);
 };
